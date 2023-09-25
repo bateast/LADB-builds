@@ -50,7 +50,6 @@ jobs:
         run: |
           if git rev-parse -q --verify ${{ env.VERSION }}; then
             echo "Tag ${{ env.VERSION }} already exists."
-            exit 0
           else
             echo "Tag ${{ env.VERSION }} does not exist"
             exit 1
@@ -59,8 +58,8 @@ jobs:
 
       - name: Create and Push Tag
         run: |
-          git tag -a ${{ env.VERSION }} -m "Version ${{ env.VERSION }}"
-          git push origin ${{ env.VERSION }}
+          git tag -f -a ${{ env.VERSION }} -m "Version ${{ env.VERSION }}"
+          git push -f origin ${{ env.VERSION }}
         if: success() && steps.check_tag.outcome == 'failure' # Only create and push the tag if the previous steps were successful
 
       - name: Build the app
