@@ -75,6 +75,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Check if Tag Exists
+        run: |
+          if git rev-parse -q --verify ${{ env.VERSION }}; then
+           echo "Tag ${{ env.VERSION }} exists."
+          else
+           echo "Tag ${{ env.VERSION }} does not exist"
+           exit 1
+          fi
+        id: check_tag
+
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -83,22 +93,22 @@ jobs:
           tag_name: ${{ env.VERSION }} # Use the extracted version as the tag name
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: success() && steps.check_tag.outcome == 'success'
 
-      - name: Get Release URL
-        id: release_url
-        run: |
-          echo "Release URL: ${{ steps.create_release.outputs.upload_url }}"
-
-      - name: Comment on Pull Request
-        if: always()
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub Actions
-          script: |
-            const releaseUrl = '${{ steps.release_url.outputs.upload_url }}';
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `You can download the APK from the [latest release](${releaseUrl}).`,
-            });
+#      - name: Get Release URL
+#        id: release_url
+#        run: |
+#          echo "Release URL: ${{ steps.create_release.outputs.upload_url }}"
+#
+#        if: always()
+#        uses: actions/github-script@v4
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub Actions
+#          script: |
+#            const releaseUrl = '${{ steps.release_url.outputs.upload_url }}';
+#            github.issues.createComment({
+#              issue_number: context.issue.number,
+#              owner: context.repo.owner,
+#              repo: context.repo.repo,
+#              body: `You can download the APK from the [latest release](${releaseUrl}).`,
+#            });
