@@ -40,8 +40,8 @@ jobs:
 
       - name: Set Git User Identity
         run: |
-        git config --global user.email "actions@example.com"
-        git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@example.com"
+          git config --global user.name "GitHub Actions"
 
       - name: Create and Push Tag
         run: |
