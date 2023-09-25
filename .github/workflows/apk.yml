@@ -7,7 +7,7 @@ on:
   #   branches:
   #     - main # Also trigger on pull requests to the main branch
   workflow_run:
-    workflows: ["Build and Release APK"]
+    workflows: ["Sync from upstream"]
     types:
       - completed # Trigger when the specified workflow completes
 
