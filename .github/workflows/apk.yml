@@ -48,6 +48,7 @@ jobs:
       - name: Check if Tag Exists
         id: check_tag
         run: |
+          cd $GITHUB_WORKSPACE
           if git rev-parse -q --verify ${{ env.VERSION }}; then
             echo "Tag ${{ env.VERSION }} already exists."
           else
@@ -60,7 +61,7 @@ jobs:
         run: |
           git tag -f -a ${{ env.VERSION }} -m "Version ${{ env.VERSION }}"
           git push -f origin ${{ env.VERSION }}
-        if: success() && steps.check_tag.outcome == 'failure' # Only create and push the tag if the previous steps were successful
+        if: success() && steps.check_tag.outcome == 'failure'
 
       - name: Build the app
         run: ./gradlew build
@@ -77,11 +78,12 @@ jobs:
     steps:
       - name: Check if Tag Exists
         run: |
+          cd $GITHUB_WORKSPACE
           if git rev-parse -q --verify ${{ env.VERSION }}; then
-           echo "Tag ${{ env.VERSION }} exists."
+            echo "Tag ${{ env.VERSION }} exists."
           else
-           echo "Tag ${{ env.VERSION }} does not exist"
-           exit 1
+            echo "Tag ${{ env.VERSION }} does not exist"
+            exit 1
           fi
         id: check_tag
 
@@ -90,7 +92,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: app/build/outputs/apk/release/*.apk
-          tag_name: ${{ env.VERSION }} # Use the extracted version as the tag name
+          tag_name: ${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: success() && steps.check_tag.outcome == 'success'
