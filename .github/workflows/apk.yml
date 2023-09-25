@@ -1,15 +1,81 @@
-name: Build
-on: [pull_request, push]
+name: Build and Release APK
+on:
+  # push:
+  #   branches:
+  #     - main # Trigger this workflow on pushes to the main branch
+  # pull_request:
+  #   branches:
+  #     - main # Also trigger on pull requests to the main branch
+  workflow_run:
+    workflows: ["Build and Release APK"]
+    types:
+      - completed # Trigger when the specified workflow completes
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
+        with:
+          ref: main # Explicitly specify the branch to checkout
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16 # Use Node.js version 16
+
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11' # You can adjust the Java version if needed
+
       - name: Build the app
         run: ./gradlew build
-      - name: Upload our APK
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v2.2.0
         with:
-         name: Release APK
-         path: app/build/outputs/apk/release/app-release-*.apk
+          name: Release APK
+          path: app/build/outputs/apk/release/app-release-*.apk
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+        with:
+          ref: main # Explicitly specify the branch to checkout
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16 # Use Node.js version 16
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: app/build/outputs/apk/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub Actions
+
+      - name: Get Release URL
+        id: release_url
+        run: echo "Release URL: ${{ steps.create_release.outputs.upload_url }}"
+
+      - name: Comment on Pull Request
+        if: always()
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { context, github } = require('@actions/github');
+            const releaseUrl = '${{ steps.release_url.outputs.upload_url }}';
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `You can download the APK from the [latest release](${releaseUrl}).`,
+            });

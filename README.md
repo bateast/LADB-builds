@@ -1,6 +1,7 @@
 # LADB
 
 A local ADB shell for Android!
+[![Build](https://github.com/Cantue35/LADB-builds/actions/workflows/apk.yml/badge.svg)](https://github.com/Cantue35/LADB-builds/actions/workflows/apk.yml)
 
 # How does it work?
 
