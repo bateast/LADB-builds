@@ -63,7 +63,8 @@ jobs:
 
       - name: Get Release URL
         id: release_url
-        run: echo "Release URL: ${{ steps.create_release.outputs.upload_url }}"
+        run: |
+          echo "Release URL: ${{ steps.create_release.outputs.upload_url }}"
 
       - name: Comment on Pull Request
         if: always()
