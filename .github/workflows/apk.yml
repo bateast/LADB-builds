@@ -2,7 +2,7 @@ name: Build and Release APK
 on:
   push:
     branches:
-      - main # Trigger this workflow on pushes to the main branch
+      - main
   # push:
   #   branches:
   #     - main # Trigger this workflow on pushes to the main branch
@@ -12,7 +12,7 @@ on:
   workflow_run:
     workflows: ["Sync from upstream"]
     types:
-      - completed # Trigger when the specified workflow completes
+      - completed
 
 jobs:
   build:
@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: main # Explicitly specify the branch to checkout
-
+          
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
@@ -33,6 +33,16 @@ jobs:
         with:
           java-version: '11' # You can adjust the Java version if needed
           distribution: 'adopt' # or specify another distribution if needed
+
+      - name: Extract Version from build.gradle
+        id: extract_version
+        run: echo "VERSION=$(grep 'versionName' app/build.gradle | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')" >> $GITHUB_ENV
+
+      - name: Create and Push Tag
+        run: |
+          git tag -a ${{ env.VERSION }} -m "Version ${{ env.VERSION }}"
+          git push origin ${{ env.VERSION }}
+        if: success() # Only create and push the tag if the previous steps were successful
 
       - name: Build the app
         run: ./gradlew build
@@ -47,36 +57,26 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v2
-        with:
-          ref: main # Explicitly specify the branch to checkout
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16 # Use Node.js version 16
-
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
           files: app/build/outputs/apk/release/*.apk
+          tag_name: ${{ env.VERSION }} # Use the extracted version as the tag name
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub Actions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get Release URL
         id: release_url
         run: |
           echo "Release URL: ${{ steps.create_release.outputs.upload_url }}"
-
+          
       - name: Comment on Pull Request
         if: always()
         uses: actions/github-script@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub Actions
           script: |
-            const { context, github } = require('@actions/github');
             const releaseUrl = '${{ steps.release_url.outputs.upload_url }}';
             github.issues.createComment({
               issue_number: context.issue.number,
