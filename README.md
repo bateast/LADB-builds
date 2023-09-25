@@ -1,41 +1,48 @@
-# LADB
+<h1>LADB <a href="https://github.com/Cantue35/LADB-builds/actions/workflows/apk.yml"><img align="right" src="https://github.com/Cantue35/LADB-builds/actions/workflows/apk.yml/badge.svg" alt="Build"></a></h1>
 
 A local ADB shell for Android!
-[![Build](https://github.com/Cantue35/LADB-builds/actions/workflows/apk.yml/badge.svg)](https://github.com/Cantue35/LADB-builds/actions/workflows/apk.yml)
 
-# How does it work?
 
-LADB bundles an ADB server within the app libraries. Normally, this server cannot connect to the local device because it
-requires an active USB connection. However, Android's Wireless ADB Debugging feature allows the server and the client to
-speak to each other locally.
+## Overview
 
-# Initial Setup
+LADB is a local ADB shell for Android that enables wireless ADB debugging. It allows you to interact with your Android device's ADB server over a local connection.
 
-Use split-screen more or a pop-out window with LADB and Settings at the same time. This is because Android will
-invalidate the pairing information if the dialog gets dismissed. Add a Wireless Debugging connection, and copy the
-pairing code and port into LADB. Keep both windows open until the Settings dialog dismisses itself.
+## How It Works
 
-# Issues
+LADB bundles an ADB server within the app libraries. Normally, this server cannot connect to the local device because it requires an active USB connection. However, Android's Wireless ADB Debugging feature allows the server and the client to speak to each other locally.
 
-LADB is sadly incompatible with Shizuku at the current moment. That means that if you have Shiuzuku installed, LADB will
-usually fail to connect properly. You must uninstall it and reboot to use LADB.
+## Initial Setup
 
-# Troubleshooting
+To get started with LADB, follow these steps:
 
-Most errors can be fixed by clearing the app data for LADB, removing all Wireless Debugging connections from Settings,
-and rebooting.
+1. Use split-screen mode or a pop-out window with LADB and Android Settings at the same time. This is important because Android will invalidate the pairing information if the dialog gets dismissed.
+2. Add a Wireless Debugging connection in Android Settings.
+3. Copy the pairing code and port from Android Settings into LADB.
+4. Keep both windows open until the Android Settings dialog dismisses itself.
 
-# License
+## Issues
 
-While this project is GPLv3 licensed, I would like to add a parameter: please do not publish unofficial (user) LADB
-builds to the Google Play Store.
+Please note that LADB is currently incompatible with Shizuku. If you have Shizuku installed, LADB may fail to connect properly. You must uninstall Shizuku and reboot your device to use LADB successfully.
 
-# Support
+## Troubleshooting
 
-Still confused? Email me at tylernij+LADB@gmail.com.
+If you encounter any issues with LADB, consider the following steps:
 
-We also have a Telegram server here: https://t.me/ladb_support.
+- Clear the app data for LADB.
+- Remove all Wireless Debugging connections from Android Settings.
+- Reboot your device.
 
-# Privacy Policy
+## License
 
-LADB does not send any device data outside the app. Your data is not collected or processed.
+LADB is released under the GPLv3 license. However, the author kindly requests that you do not publish unofficial (user) LADB builds to the Google Play Store.
+
+## Support
+If you find LADB useful and would like to support the developer, consider purchasing the application from [Google Play](https://play.google.com/store/apps/details?id=com.draco.ladb).
+
+If you have questions or need assistance, you can contact the author via email at tylernij+LADB@gmail.com.
+
+There is also a Telegram server available for support: [LADB Support](https://t.me/ladb_support).
+
+## Privacy Policy
+
+LADB respects your privacy and does not send any device data outside the app. Your data is not collected or processed.
