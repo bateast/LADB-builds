@@ -78,8 +78,7 @@ jobs:
     steps:
       - name: Check if Tag Exists
         run: |
-          cd $GITHUB_WORKSPACE
-          if git rev-parse -q --verify ${{ env.VERSION }}; then
+          if git -C $GITHUB_WORKSPACE rev-parse -q --verify ${{ env.VERSION }}; then
             echo "Tag ${{ env.VERSION }} exists."
           else
             echo "Tag ${{ env.VERSION }} does not exist"
