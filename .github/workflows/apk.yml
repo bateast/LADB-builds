@@ -89,6 +89,8 @@ jobs:
             exit 1
           fi
         id: check_tag
+        working-directory: $GITHUB_WORKSPACE
+
 
       - name: Create Release
         id: create_release
