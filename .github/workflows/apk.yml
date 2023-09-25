@@ -1,4 +1,5 @@
 name: Build and Release APK
+
 on:
   push:
     branches:
@@ -17,12 +18,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
         with:
           ref: main # Explicitly specify the branch to checkout
-          
+
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
@@ -38,12 +40,8 @@ jobs:
         id: extract_version
         run: echo "VERSION=$(grep 'versionName' app/build.gradle | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')" >> $GITHUB_ENV
 
-      - name: Set Git User Identity
-        run: |
-          git config --global user.email "actions@example.com"
-          git config --global user.name "GitHub Actions"
-
       - name: Check if Tag Exists
+        id: check_tag
         run: |
           if git rev-parse -q --verify ${{ env.VERSION }}; then
             echo "Tag ${{ env.VERSION }} already exists."
@@ -52,14 +50,13 @@ jobs:
             echo "Tag ${{ env.VERSION }} does not exist"
             exit 1
           fi
-        id: check_tag
         continue-on-error: true
 
       - name: Create and Push Tag
         run: |
           git tag -a ${{ env.VERSION }} -m "Version ${{ env.VERSION }}"
           git push origin ${{ env.VERSION }}
-        if: success() && steps.check_tag.outcome == 'failure' # Only create and push the tag if the previous steps were successful
+        if: success() && steps.check_tag.outcome == 'failure'
 
       - name: Build the app
         run: ./gradlew build
@@ -87,7 +84,7 @@ jobs:
         id: release_url
         run: |
           echo "Release URL: ${{ steps.create_release.outputs.upload_url }}"
-          
+
       - name: Comment on Pull Request
         if: always()
         uses: actions/github-script@v4
