@@ -87,6 +87,9 @@ jobs:
           name: Release-APK
           path: ./release-apk
 
+      - name: List downloaded artifacts (debugging step)
+        run: ls -lR ./release-apk
+
       - name: Check if Tag Exists
         run: |
           if git rev-parse -q --verify refs/tags/${{ env.VERSION }}; then
