@@ -65,7 +65,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4.3.5
         with:
-          name: Release APK
+          name: Release-APK
           path: app/build/outputs/apk/release/app-release-*.apk
 
   release:
@@ -81,6 +81,12 @@ jobs:
       - name: Load VERSION variable
         run: echo "VERSION=${{ needs.build.outputs.VERSION }}" >> $GITHUB_ENV
 
+      - name: Download APK artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: Release-APK
+          path: ./release-apk
+
       - name: Check if Tag Exists
         run: |
           if git rev-parse -q --verify refs/tags/${{ env.VERSION }}; then
@@ -94,7 +100,7 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          files: app/build/outputs/apk/release/*.apk
+          files: ./release-apk/app-release-*.apk
           tag_name: ${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
