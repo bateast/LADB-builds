@@ -40,29 +40,21 @@ jobs:
 
       - name: Load VERSION variable
         run: echo "VERSION=${{ env.VERSION }}" >> $GITHUB_ENV
-        if: steps.extract_version.outputs.id == 'extract_version'
 
       - name: Set Git User Identity
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
 
-      - name: Check if Tag Exists
-        id: check_tag
+      - name: Create and Push Tag
+        id: create_tag
         run: |
-          if git rev-parse -q --verify ${{ env.VERSION }}; then
+          if git rev-parse -q --verify refs/tags/${{ env.VERSION }}; then
             echo "Tag ${{ env.VERSION }} already exists."
           else
-            echo "Tag ${{ env.VERSION }} does not exist"
-            exit 1
+            git tag ${{ env.VERSION }}
+            git push origin ${{ env.VERSION }}
           fi
-        continue-on-error: true
-
-      - name: Create and Push Tag
-        run: |
-          git tag -f -a ${{ env.VERSION }} -m "Version ${{ env.VERSION }}"
-          git push -f origin ${{ env.VERSION }}
-        if: success() && steps.check_tag.outcome == 'failure'
 
       - name: Build the app
         run: ./gradlew build
@@ -76,21 +68,29 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4.1.7
         with:
           fetch-depth: 0
 
+      - name: Set Git User Identity
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Load VERSION variable
+        run: echo "VERSION=${{ needs.build.outputs.VERSION }}" >> $GITHUB_ENV
+
       - name: Check if Tag Exists
         run: |
-          if git rev-parse -q --verify ${{ env.VERSION }}; then
+          if git rev-parse -q --verify refs/tags/${{ env.VERSION }}; then
             echo "Tag ${{ env.VERSION }} exists."
           else
             echo "Tag ${{ env.VERSION }} does not exist"
             exit 1
           fi
-        id: check_tag
 
       - name: Create Release
         id: create_release
@@ -100,4 +100,3 @@ jobs:
           tag_name: ${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: success() && steps.check_tag.outcome == 'success'
