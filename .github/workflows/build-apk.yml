@@ -17,6 +17,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    outputs:
+      VERSION: ${{ steps.extract_version.outputs.version }}
+
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4.1.7
@@ -36,10 +39,10 @@ jobs:
 
       - name: Extract Version from build.gradle
         id: extract_version
-        run: echo "VERSION=$(grep 'versionName' app/build.gradle | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')" >> $GITHUB_ENV
-
-      - name: Load VERSION variable
-        run: echo "VERSION=${{ env.VERSION }}" >> $GITHUB_ENV
+        run: |
+          VERSION=$(grep 'versionName' app/build.gradle | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          echo "::set-output name=version::${VERSION}"
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
       - name: Set Git User Identity
         run: |
@@ -49,11 +52,11 @@ jobs:
       - name: Create and Push Tag
         id: create_tag
         run: |
-          if git rev-parse -q --verify refs/tags/${{ env.VERSION }}; then
-            echo "Tag ${{ env.VERSION }} already exists."
+          if git rev-parse -q --verify refs/tags/${{ steps.extract_version.outputs.version }}; then
+            echo "Tag ${{ steps.extract_version.outputs.version }} already exists."
           else
-            git tag ${{ env.VERSION }}
-            git push origin ${{ env.VERSION }}
+            git tag ${{ steps.extract_version.outputs.version }}
+            git push origin ${{ steps.extract_version.outputs.version }}
           fi
 
       - name: Build the app
@@ -74,11 +77,6 @@ jobs:
         uses: actions/checkout@v4.1.7
         with:
           fetch-depth: 0
-
-      - name: Set Git User Identity
-        run: |
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
 
       - name: Load VERSION variable
         run: echo "VERSION=${{ needs.build.outputs.VERSION }}" >> $GITHUB_ENV
