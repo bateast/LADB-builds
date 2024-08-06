@@ -1,11 +1,14 @@
-name: Build and Release APK
+name: "Build and Release APK"
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'app/**'          # Only trigger when files in the app directory change
+      - 'build.gradle'    # Only trigger when build.gradle changes
   workflow_run:
-    workflows: ["Upstream Sync"]
+    workflows: ["Sync Upstream"]
     types:
       - completed
 
@@ -27,8 +30,8 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v2
         with:
-          java-version: '11'
-          distribution: 'adopt'
+          java-version: '11' # You can adjust the Java version if needed
+          distribution: 'adopt' # or specify another distribution if needed
 
       - name: Extract Version from build.gradle
         id: extract_version
@@ -46,7 +49,6 @@ jobs:
       - name: Check if Tag Exists
         id: check_tag
         run: |
-          cd $GITHUB_WORKSPACE
           if git rev-parse -q --verify ${{ env.VERSION }}; then
             echo "Tag ${{ env.VERSION }} already exists."
           else
@@ -76,14 +78,13 @@ jobs:
     steps:
       - name: Check if Tag Exists
         run: |
-          if git -C $GITHUB_WORKSPACE rev-parse -q --verify ${{ env.VERSION }}; then
+          if git rev-parse -q --verify ${{ env.VERSION }}; then
             echo "Tag ${{ env.VERSION }} exists."
           else
             echo "Tag ${{ env.VERSION }} does not exist"
             exit 1
           fi
         id: check_tag
-        working-directory: $GITHUB_WORKSPACE
 
       - name: Create Release
         id: create_release
