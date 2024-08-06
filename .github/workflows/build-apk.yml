@@ -11,6 +11,7 @@ on:
     workflows: ["Sync Upstream"]
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
   build:
@@ -76,6 +77,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4.1.7
+        with:
+          fetch-depth: 0
+
       - name: Check if Tag Exists
         run: |
           if git rev-parse -q --verify ${{ env.VERSION }}; then
