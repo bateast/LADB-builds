@@ -4,14 +4,8 @@ on:
   push:
     branches:
       - main
-  # push:
-  #   branches:
-  #     - main # Trigger this workflow on pushes to the main branch
-  # pull_request:
-  #   branches:
-  #     - main # Also trigger on pull requests to the main branch
   workflow_run:
-    workflows: ["Sync from upstream"]
+    workflows: ["Upstream Sync"]
     types:
       - completed
 
@@ -21,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4.1.7
         with:
           ref: main # Explicitly specify the branch to checkout
 
@@ -33,8 +27,8 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v2
         with:
-          java-version: '11' # You can adjust the Java version if needed
-          distribution: 'adopt' # or specify another distribution if needed
+          java-version: '11'
+          distribution: 'adopt'
 
       - name: Extract Version from build.gradle
         id: extract_version
@@ -71,7 +65,7 @@ jobs:
         run: ./gradlew build
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v2.2.0
+        uses: actions/upload-artifact@v4.3.5
         with:
           name: Release APK
           path: app/build/outputs/apk/release/app-release-*.apk
@@ -91,7 +85,6 @@ jobs:
         id: check_tag
         working-directory: $GITHUB_WORKSPACE
 
-
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -101,21 +94,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: success() && steps.check_tag.outcome == 'success'
-
-#      - name: Get Release URL
-#        id: release_url
-#        run: |
-#          echo "Release URL: ${{ steps.create_release.outputs.upload_url }}"
-#
-#        if: always()
-#        uses: actions/github-script@v4
-#        with:
-#          github-token: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub Actions
-#          script: |
-#            const releaseUrl = '${{ steps.release_url.outputs.upload_url }}';
-#            github.issues.createComment({
-#              issue_number: context.issue.number,
-#              owner: context.repo.owner,
-#              repo: context.repo.repo,
-#              body: `You can download the APK from the [latest release](${releaseUrl}).`,
-#            });

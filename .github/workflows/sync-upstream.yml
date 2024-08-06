@@ -1,0 +1,49 @@
+name: "Sync Upstream"
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"  # run at midnight UTC on the first day of every month
+  workflow_dispatch:
+
+jobs:
+  sync_latest_from_upstream:
+    runs-on: ubuntu-latest
+    outputs:
+      has_new_commits: ${{ steps.sync.outputs.has_new_commits }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.1.7
+        with:
+          fetch-depth: 0
+
+      - name: Sync Upstream Changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+          target_sync_branch: main
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_sync_branch: main
+          upstream_sync_repo: tytydraco/LADB
+        env:
+          UNSHALLOW: true
+
+      - name: Start Build
+        if: steps.sync.outputs.has_new_commits == 'true'
+        uses: benc-uk/workflow-dispatch@v1.2.4
+        with:
+          workflow: build-apk.yml
+
+      - name: Download Artifact
+        if: steps.sync.outputs.has_new_commits == 'false'
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: Release
+          latest: true
+          path: artifact
+
+      - name: Upload Artifact
+        if: steps.sync.outputs.has_new_commits == 'false'
+        uses: actions/upload-artifact@v4.3.5
+        with:
+          name: Release
+          path: artifact

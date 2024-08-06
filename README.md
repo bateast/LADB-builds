@@ -1,7 +1,12 @@
-<h1>LADB <a href="https://github.com/Cantue35/LADB-builds/actions/workflows/apk.yml"><img align="right" src="https://github.com/Cantue35/LADB-builds/actions/workflows/apk.yml/badge.svg" alt="Build"></a></h1>
+<p align="center">
+    <a href="https://play-lh.googleusercontent.com/e1lEjVH1cjZFjyKGymB3HprppThMBnZlfi51z7alJm5wpTzWHNG2WWOlROs_vp-sQb7a=s128">
+        <img src="https://play-lh.googleusercontent.com/e1lEjVH1cjZFjyKGymB3HprppThMBnZlfi51z7alJm5wpTzWHNG2WWOlROs_vp-sQb7a=s128" />
+    </a>
+</p>
 
-A local ADB shell for Android!
+<h1 align="center">LADB</h1>
 
+<h4 align="center">A local ADB shell for Android!</h4>
 
 ## Overview
 
