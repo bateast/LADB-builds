@@ -1,48 +1,44 @@
 name: "Build and Release APK"
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'app/**'          # Only trigger when files in the app directory change
-      - 'build.gradle'    # Only trigger when build.gradle changes
-  workflow_run:
-    workflows: ["Sync Upstream"]
-    types:
-      - completed
+  # Run only when explicitly dispatched (by sync-upstream or manually)
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     outputs:
-      VERSION: ${{ steps.extract_version.outputs.version }}
-
+      BUILD_TAG: ${{ steps.extract_version.outputs.build_tag }}
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v4.1.7
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          ref: main # Explicitly specify the branch to checkout
+          ref: main
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 16 # Use Node.js version 16
+          node-version: 16
 
       - name: Set up Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
-          java-version: '11' # You can adjust the Java version if needed
-          distribution: 'adopt' # or specify another distribution if needed
+          distribution: temurin
+          java-version: 11
 
-      - name: Extract Version from build.gradle
+      - name: Extract Base Version and Generate Unique Build Tag
         id: extract_version
         run: |
-          VERSION=$(grep 'versionName' app/build.gradle | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-          echo "::set-output name=version::${VERSION}"
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          # Extract version string from build.gradle (adjust regex if needed)
+          BASE_VERSION=$(grep 'versionName' app/build.gradle | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          if [ -z "$BASE_VERSION" ]; then
+            echo "No version found in build.gradle" && exit 1
+          fi
+          # Create a unique tag (e.g. v1.2.3-20250205123045)
+          BUILD_TAG="v${BASE_VERSION}-$(date +'%Y%m%d%H%M%S')"
+          echo "BUILD_TAG=${BUILD_TAG}" >> $GITHUB_ENV
+          echo "::set-output name=build_tag::${BUILD_TAG}"
+          echo "Unique build tag is ${BUILD_TAG}"
 
       - name: Set Git User Identity
         run: |
@@ -50,19 +46,14 @@ jobs:
           git config --global user.name "GitHub Actions"
 
       - name: Create and Push Tag
-        id: create_tag
         run: |
-          if git rev-parse -q --verify refs/tags/${{ steps.extract_version.outputs.version }}; then
-            echo "Tag ${{ steps.extract_version.outputs.version }} already exists."
-          else
-            git tag ${{ steps.extract_version.outputs.version }}
-            git push origin ${{ steps.extract_version.outputs.version }}
-          fi
+          git tag ${BUILD_TAG}
+          git push origin ${BUILD_TAG}
 
-      - name: Build the app
+      - name: Build the APK
         run: ./gradlew build
 
-      - name: Upload APK artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4.3.5
         with:
           name: Release-APK
@@ -71,39 +62,31 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v4.1.7
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Load VERSION variable
-        run: echo "VERSION=${{ needs.build.outputs.VERSION }}" >> $GITHUB_ENV
+      - name: Load BUILD_TAG Variable
+        run: echo "BUILD_TAG=${{ needs.build.outputs.BUILD_TAG }}" >> $GITHUB_ENV
 
-      - name: Download APK artifact
-        uses: actions/download-artifact@v2
+      - name: Download APK Artifact
+        uses: actions/download-artifact@v4.3.5
         with:
           name: Release-APK
-          path: ./release-apk
+          path: release-apk
 
-      - name: List downloaded artifacts (debugging step)
-        run: ls -lR ./release-apk
+      - name: List Downloaded APK Files (Debug)
+        run: ls -lR release-apk
 
-      - name: Check if Tag Exists
-        run: |
-          if git rev-parse -q --verify refs/tags/${{ env.VERSION }}; then
-            echo "Tag ${{ env.VERSION }} exists."
-          else
-            echo "Tag ${{ env.VERSION }} does not exist"
-            exit 1
-          fi
-
-      - name: Create Release
+      - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./release-apk/app-release-*.apk
-          tag_name: ${{ env.VERSION }}
+          tag_name: ${{ env.BUILD_TAG }}
+          name: "Release ${{ env.BUILD_TAG }}"
+          body: "Automated release for build tag ${{ env.BUILD_TAG }}"
+          files: release-apk/app-release-*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

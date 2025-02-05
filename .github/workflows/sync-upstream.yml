@@ -2,7 +2,8 @@ name: "Sync Upstream"
 
 on:
   schedule:
-    - cron: "0 0 1 * *"  # run at midnight UTC on the first day of every month
+    #- cron: "0 0 1 * *"  # run at midnight UTC on the first day of every month
+    - cron: "0 0 1 1,4,7,10 *"  # runs at midnight UTC on Jan 1, Apr 1, Jul 1, and Oct 1
   workflow_dispatch:
 
 jobs:
@@ -12,7 +13,7 @@ jobs:
       has_new_commits: ${{ steps.sync.outputs.has_new_commits }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -27,23 +28,8 @@ jobs:
         env:
           UNSHALLOW: true
 
-      - name: Start Build
+      - name: Trigger Build if New Commits Detected
         if: steps.sync.outputs.has_new_commits == 'true'
         uses: benc-uk/workflow-dispatch@v1.2.4
         with:
           workflow: build-apk.yml
-
-      - name: Download Artifact
-        if: steps.sync.outputs.has_new_commits == 'false'
-        uses: actions/download-artifact@v4.1.8
-        with:
-          name: Release
-          latest: true
-          path: artifact
-
-      - name: Upload Artifact
-        if: steps.sync.outputs.has_new_commits == 'false'
-        uses: actions/upload-artifact@v4.3.5
-        with:
-          name: Release
-          path: artifact
