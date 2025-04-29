@@ -63,6 +63,7 @@ jobs:
         run: |
           jarsigner -verbose -sigalg SHA256withECDSA -digestalg SHA-256 \
             -keystore my-release-key.jks -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -keypass ${{ secrets.KEY_PASSWORD }} \
             app/build/outputs/apk/release/app-release-unsigned.apk ${{ secrets.KEY_ALIAS }}
 
       - name: Verify signature
@@ -108,6 +109,6 @@ jobs:
           tag_name: ${{ env.BUILD_TAG }}
           name: "Release ${{ env.BUILD_TAG }}"
           body: "Automated release for build tag ${{ env.BUILD_TAG }}"
-          files: release-apk/app-release-*.apk
+          files: release-apk/app-release*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
